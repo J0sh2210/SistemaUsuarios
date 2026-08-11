@@ -38,6 +38,20 @@ FOREIGN KEY (IdRol)REFERENCES Rol(IdRol) ON DELETE RESTRICT,
 FOREIGN KEY (IdCredencial) REFERENCES Credencial(IdCredencial)
 );
 
+CREATE TABLE Tarea (
+    IdTarea         INT PRIMARY KEY AUTO_INCREMENT,
+    IdCreador       INT NULL,
+    IdUsuario       INT NULL,
+    Titulo          VARCHAR(100) NOT NULL,
+    Descripcion     TEXT,
+    Estado          ENUM('pendiente', 'en_progreso', 'completada') NOT NULL DEFAULT 'pendiente',
+    FechaCreacion   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FechaFin        DATETIME NULL,
+    
+    FOREIGN KEY (IdCreador) REFERENCES Usuario(IdUsuario) ON DELETE SET NULL,
+    FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario) ON DELETE SET NULL
+);
+
 --inserts necesarios
 INSERT INTO Rol(Descripcion)
 VALUES
