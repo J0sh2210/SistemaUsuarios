@@ -912,6 +912,73 @@ POST /api/auth/solicitar_token.php
 
 ---
 
+## Como Probar el Frontend
+
+### Requisitos previos
+1. Apache corriendo en XAMPP
+2. MySQL corriendo en XAMPP
+3. Base de datos `sistemausuario` creada (ejecutar `sql/creardb.sql`)
+4. Archivo `.env` configurado con credenciales de BD y SMTP
+5. Dependencias instaladas (`composer install`)
+
+### 1. Login con contrasena
+1. Abrir `http://localhost/SistemaUsuarios/public/index.html`
+2. Escribir el correo y contrasena del usuario
+3. Hacer clic en "Iniciar Sesion"
+4. Redirige al dashboard segun el rol
+
+### 2. Login con token por correo
+1. En la pagina de login, hacer clic en "Enviar link de acceso"
+2. Escribir el correo del usuario
+3. Hacer clic en "Enviar"
+4. Revisar el correo electrónico (carpeta de spam si no aparece)
+5. Hacer clic en el enlace del correo
+6. Redirige al dashboard automaticamente
+
+### 3. Dashboard - Secciones disponibles
+
+**Admin (IdRol = 1):**
+| Seccion | URL | Descripcion |
+|---------|-----|-------------|
+| Inicio | `dashboard.php?seccion=inicio` | Estadisticas (usuarios, tareas, pendientes) |
+| Usuarios | `dashboard.php?seccion=usuarios` | CRUD de usuarios |
+| Tareas | `dashboard.php?seccion=tareas` | CRUD de tareas |
+| Mi Perfil | `dashboard.php?seccion=perfil` | Editar datos y cambiar contrasena |
+
+**Empleado (IdRol = 2):**
+| Seccion | URL | Descripcion |
+|---------|-----|-------------|
+| Inicio | `dashboard.php?seccion=inicio` | Estadisticas (mis tareas, pendientes) |
+| Mis Tareas | `dashboard.php?seccion=mis_tareas` | Ver y cambiar estado de tareas asignadas |
+| Mi Perfil | `dashboard.php?seccion=perfil` | Editar datos y cambiar contrasena |
+
+### 4. CRUD de Usuarios (solo admin)
+1. Ir a "Usuarios" en el sidebar
+2. **Crear:** Hacer clic en "+ Nuevo Usuario", llenar formulario, clic en "Crear"
+3. **Editar:** Hacer clic en "Editar" en la tabla, modificar campos, clic en "Guardar Cambios"
+4. **Eliminar:** Hacer clic en "Eliminar" en la tabla, confirmar
+
+### 5. CRUD de Tareas (admin) / Mis Tareas (empleado)
+**Admin:**
+1. Ir a "Tareas" en el sidebar
+2. **Crear:** Hacer clic en "+ Nueva Tarea", seleccionar usuario, llenar formulario, clic en "Crear"
+3. **Editar:** Hacer clic en "Editar" en la tabla, modificar campos, clic en "Guardar Cambios"
+4. **Eliminar:** Hacer clic en "Eliminar" en la tabla, confirmar
+
+**Empleado:**
+1. Ir a "Mis Tareas" en el sidebar
+2. **Cambiar estado:** Seleccionar nuevo estado en el dropdown de cada tarea
+
+### 6. Perfil y cambio de contrasena
+1. Ir a "Mi Perfil" en el sidebar
+2. **Editar datos:** Modificar nombres/apellidos/correo, clic en "Guardar Cambios"
+3. **Cambiar contrasena:** Escribir contrasena actual y nueva, clic en "Cambiar Contrasena"
+
+### 7. Cerrar sesion
+Hacer clic en "Cerrar Sesion" en la parte inferior del sidebar.
+
+---
+
 ## Instalacion
 
 1. Clonar el repositorio
