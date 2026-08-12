@@ -920,3 +920,11 @@ POST /api/auth/solicitar_token.php
 4. Configurar `.env` con las credenciales de base de datos y SMTP
 5. Apuntar Apache al directorio del proyecto
 6. Abrir `http://localhost/SistemaUsuarios/public/index.html`
+
+##Usuario de prueba credenciales
+
+
+Usuario:	admin
+Correo:	admin@ejemplo.com
+Contrasena:	admin123
+Rol	administrador: (IdRol = 1)
