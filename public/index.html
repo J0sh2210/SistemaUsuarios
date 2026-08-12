@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Usuarios</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h1>Sistema de Usuarios</h1>
+        <p class="subtitle">Inicia sesion para continuar</p>
+
+        <!-- LOGIN CON CONTRASENA -->
+        <form id="login-form-conventional">
+            <input type="email" id="correo" placeholder="Correo electronico" required>
+            <input type="password" id="contrasena" placeholder="Tu contrasena" required>
+            <button type="submit" class="btn-login">Iniciar Sesion</button>
+        </form>
+
+        <div class="separator">
+            <span>o</span>
+        </div>
+
+        <!-- LOGIN CON TOKEN -->
+        <form id="login-form-alternative">
+            <input type="email" id="correo-alt" placeholder="Correo electronico" required>
+            <button type="submit" class="btn-token">Enviar enlace por correo</button>
+        </form>
+
+        <div class="message"></div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

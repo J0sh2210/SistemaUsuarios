@@ -1,0 +1,130 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.login-container {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-container h1 {
+    text-align: center;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+    font-size: 1.8em;
+}
+
+.login-container .subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 25px;
+    font-size: 0.95em;
+}
+
+.login-container form {
+    margin-bottom: 20px;
+}
+
+.login-container input[type="email"],
+.login-container input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    transition: border 0.3s;
+}
+
+.login-container input:focus {
+    outline: none;
+    border-color: #1a1a2e;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.1s;
+}
+
+.login-container button:hover {
+    opacity: 0.9;
+}
+
+.login-container button:active {
+    transform: scale(0.98);
+}
+
+.btn-login {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: white;
+}
+
+.btn-token {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.separator {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.separator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #ddd;
+}
+
+.separator span {
+    background: white;
+    padding: 0 15px;
+    color: #888;
+    font-size: 0.9em;
+    position: relative;
+}
+
+.message {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: none;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    display: block;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    display: block;
+}
