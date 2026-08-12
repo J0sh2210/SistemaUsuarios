@@ -21,35 +21,45 @@ SistemaUsuarios/
 ├── api/
 │   ├── auth/
 │   │   ├── login.php                 # Login con correo y contrasena
-│   │   ├── logout.php                # Cierre de sesion
+│   │   ├── logout.php                # Cierre de sesion (redirige al login)
 │   │   ├── solicitar_token.php       # Solicitar token por correo
 │   │   └── verificar_token_email.php # Verificar token y crear sesion
 │   ├── usuarios/
 │   │   ├── cambiar_contrasena.php    # Cambiar contrasena del usuario
 │   │   ├── crear.php                 # Crear usuario (admin)
-│   │   ├── editar.php                # Editar usuario (admin/Usuario)
+│   │   ├── editar.php                # Editar usuario (admin/usuario)
 │   │   ├── eliminar.php              # Eliminar usuario (admin)
-│   │   ├── listar.php                # Listar usuarios (admin)
-│   │   └── obtener.php               # Obtener datos de usuario
+│   │   ├── listarUsuarios.php        # Listar usuarios (admin)
+│   │   └── obtenerUsuario.php        # Obtener datos de usuario
 │   └── tareas/
 │       ├── crear.php                 # Crear tarea (admin)
 │       ├── editar.php                # Editar tarea (admin/usuario)
 │       ├── eliminar.php              # Eliminar tarea (admin)
 │       ├── listar.php                # Listar tareas (admin/usuario)
-│       └── obtener.php               # Obtener datos de tarea
+│       └── obtenerTarea.php          # Obtener datos de tarea
 ├── config/
-│   ├── conexion.php                  # Conexion a base de datos (PDO)
+│   ├── conexion.php                  # Conexion a BD (PDO, carga .env)
 │   └── correo.php                    # Configuracion SMTP para correos
 ├── middleware/
 │   ├── auth.php                      # Verifica sesion activa
 │   └── rol_admin.php                 # Verifica rol de administrador
+├── public/
+│   ├── index.html                    # Pagina de login
+│   ├── dashboard.php                 # Panel principal
+│   ├── css/
+│   │   ├── style.css                 # Estilos del login
+│   │   └── dashboard.css             # Estilos del dashboard
+│   └── js/
+│       ├── auth.js                   # Logica del login
+│       └── dashboard.js              # Logica del dashboard (CRUD)
 ├── services/
 │   ├── mail_service.php              # Servicio de envio de correos
 │   └── token_service.php             # Servicio de gestion de tokens
 ├── sql/
 │   └── creardb.sql                   # Script de creacion de base de datos
 ├── vendor/                           # Dependencias de Composer
-├── .env                              # Variables de entorno
+├── .env                              # Variables de entorno (no commitear)
+├── .gitignore                        # Archivos ignorados por git
 ├── composer.json                     # Configuracion de Composer
 └── README.md                         # Este archivo
 ```
@@ -79,18 +89,33 @@ El esquema se encuentra en `sql/creardb.sql` y consta de las siguientes tablas:
 
 ## Configuracion
 
-### config/conexion.php
-Establece la conexion a la base de datos MySQL usando PDO.
+### .env
+Variables de entorno cargadas por `conexion.php` y `correo.php`:
 
-- **Host:** localhost
-- **Base de datos:** sistemausuario
-- **Usuario:** root
-- **Password:** (vacio)
+```
+DB_HOST=localhost
+DB_NAME=sistemausuario
+DB_USER=root
+DB_PASSWORD=
+
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=tu_correo@gmail.com
+MAIL_PASSWORD=tu_password_app
+MAIL_FROM_NAME="Sistema de Usuarios"
+
+APP_URL=http://localhost/SistemaUsuarios
+```
+
+### config/conexion.php
+Establece la conexion a la base de datos MySQL usando PDO. Carga las credenciales desde `.env`.
+
 - **Charset:** utf8
 - **Modo de error:** ERRMODE_EXCEPTION
+- ** Conexion persistente:** PDO::ATTR_PERSISTENT => true
 
 ### config/correo.php
-Carga las variables de entorno relacionadas con la configuracion SMTP para el envio de correos.
+Retorna la configuracion SMTP para el envio de correos, usando las variables de entorno cargadas por `conexion.php`.
 
 **Variables utilizadas:**
 - `MAIL_HOST`
@@ -125,7 +150,7 @@ Clase `mail_service` para el envio de correos electronicos usando PHPMailer.
 **Metodo: enviarLoginLink(string $correo, string $token): bool**
 1. Configura PHPMailer con SMTP (STARTTLS)
 2. Establece el remitente desde las variables de entorno
-3. Genera un enlace de inicio de sesion con el token
+3. Genera un enlace de inicio de sesion usando `$_ENV["APP_URL"]`
 4. Envia un correo HTML con el enlace
 5. Retorna true si el envio es exitoso
 
@@ -138,9 +163,9 @@ Clase `mail_service` para el envio de correos electronicos usando PHPMailer.
 Verifica que el usuario tenga una sesion activa.
 
 **Funcionamiento:**
-1. Inicia `session_start()`
+1. Ejecuta `session_start()`
 2. Verifica que `$_SESSION['autenticado']` exista y sea `true`
-3. Si no esta autenticado, redirige al login
+3. Si no esta autenticado, redirige a `/SistemaUsuarios/public/index.html`
 
 **Uso:**
 ```php
@@ -154,7 +179,7 @@ require __DIR__ . "/../../middleware/auth.php";
 Verifica que el usuario tenga rol de administrador.
 
 **Funcionamiento:**
-1. Incluye `auth.php` (primero verifica autenticacion)
+1. Incluye `auth.php` (primero verifica autenticacion y sesion)
 2. Verifica que `$_SESSION['rol']` sea `1` (administrador)
 3. Si no es admin, retorna error 403
 
@@ -184,12 +209,13 @@ Autentica a un usuario con correo y contrasena.
 ```
 
 **Proceso:**
-1. Valida que los campos `correo` y `contrasena` esten presentes
-2. Busca el usuario por correo en la tabla `Credencial`
-3. Verifica la contrasena usando `password_verify()`
-4. Si es valido, inicia sesion con `session_start()`
-5. Guarda en sesion: `idUsuario`, `idCredencial`, `nombre`, `apellido`, `rol`, `correo`, `autenticado`
-6. Retorna JSON de exito
+1. Valida que el JSON sea valido (`json_decode`)
+2. Valida que los campos `correo` y `contrasena` esten presentes
+3. Busca el usuario por correo en la tabla `Credencial`
+4. Verifica la contrasena usando `password_verify()`
+5. Si es valido, inicia sesion con `session_start()`
+6. Guarda en sesion: `idUsuario` (int), `IdCredencial` (int), `nombre`, `apellido`, `rol` (int), `correo`, `autenticado`
+7. Retorna JSON de exito
 
 **Salida exitosa:**
 ```json
@@ -211,23 +237,18 @@ Autentica a un usuario con correo y contrasena.
 
 ### logout.php
 
-Cierra la sesion del usuario.
+Cierra la sesion del usuario y redirige al login.
 
-- **Metodo HTTP:** POST/GET
+- **Metodo HTTP:** GET
 - **Middleware:** Ninguno
 
 **Proceso:**
 1. Inicia `session_start()`
-2. Destruye la sesion con `session_destroy()`
-3. Retorna JSON de exito
+2. Limpia las variables de sesion con `session_unset()`
+3. Destruye la sesion con `session_destroy()`
+4. Redirige a `../../public/index.html`
 
-**Salida:**
-```json
-{
-    "success": true,
-    "message": "Sesion cerrada"
-}
-```
+**Nota:** No retorna JSON, solo redirige.
 
 ---
 
@@ -247,11 +268,12 @@ Genera un token de un solo uso y lo envia al correo del usuario.
 ```
 
 **Proceso:**
-1. Valida que el campo `correo` este presente
-2. Busca el usuario por correo en la tabla `Credencial`
-3. Genera un token usando `TokenService::crearToken()`
-4. Envia el enlace de inicio de sesion usando `MailService::enviarLoginLink()`
-5. Retorna JSON de exito
+1. Valida que el JSON sea valido (`json_decode`)
+2. Valida que el campo `correo` este presente
+3. Busca el usuario por correo en la tabla `Credencial`
+4. Genera un token usando `TokenService::crearToken()`
+5. Envia el enlace de inicio de sesion usando `MailService::enviarLoginLink()`
+6. Retorna JSON de exito
 
 **Salida exitosa:**
 ```json
@@ -276,13 +298,13 @@ Valida un token enviado por correo electronico y crea la sesion.
 ```
 
 **Proceso:**
-1. Obtiene el token de `$_GET['token']`
+1. Valida que el parametro `token` exista en la URL
 2. Ejecuta UPDATE condicional (marca como usado solo si no lo esta):
    - Filtra por token, `Usado = FALSE` y `FechaExpiracion > NOW()`
    - Usa `rowCount()` para detectar condiciones de carrera
 3. Si `rowCount() === 0` → token invalido o ya usado
 4. Si es valido → obtiene datos del usuario con JOIN
-5. Inicia sesion con los datos del usuario
+5. Inicia sesion con los datos del usuario (casts a int para `idUsuario`, `IdCredencial`, `rol`)
 6. Redirige al dashboard
 
 **Nota de seguridad:** El UPDATE condicional previene que dos personas usen el mismo token simultaneamente.
@@ -291,7 +313,7 @@ Valida un token enviado por correo electronico y crea la sesion.
 
 ## API de Usuarios (api/usuarios/)
 
-### listar.php
+### listarUsuarios.php
 
 Lista todos los usuarios del sistema.
 
@@ -333,7 +355,7 @@ JOIN Rol r ON u.IdRol = r.IdRol
 
 ---
 
-### obtener.php
+### obtenerUsuario.php
 
 Obtiene los datos de un usuario especifico.
 
@@ -351,9 +373,10 @@ Obtiene los datos de un usuario especifico.
 **Nota:** Si no se envia `IdUsuario`, usa `$_SESSION['idUsuario']` (el usuario ve su propio perfil). Solo el admin puede ver perfiles de otros usuarios.
 
 **Proceso:**
-1. Resuelve el usuario objetivo (JSON o sesion)
-2. Valida permisos (admin puede ver todos, usuario solo el suyo)
-3. Retorna datos del usuario
+1. Valida que el JSON sea valido (`json_decode`)
+2. Resuelve el usuario objetivo (JSON o sesion)
+3. Valida permisos (admin puede ver todos, usuario solo el suyo)
+4. Retorna datos del usuario
 
 **Salida:**
 ```json
@@ -393,13 +416,14 @@ Crea un nuevo usuario en el sistema.
 ```
 
 **Proceso:**
-1. Valida que todos los campos requeridos esten presentes
-2. Hashea la contrasena con `password_hash(PASSWORD_DEFAULT)`
-3. Inicia transaccion
-4. INSERT en `Credencial` (NombreUsuario, Correo, contrasena)
-5. Obtiene el `IdCredencial` generado
-6. INSERT en `Usuario` (nombres, IdRol, IdCredencial)
-7. Confirma transaccion o hace rollback
+1. Valida que el JSON sea valido (`json_decode`)
+2. Valida que todos los campos requeridos esten presentes
+3. Hashea la contrasena con `password_hash(PASSWORD_DEFAULT)`
+4. Inicia transaccion
+5. INSERT en `Credencial` (NombreUsuario, Correo, contrasena)
+6. Obtiene el `IdCredencial` generado
+7. INSERT en `Usuario` (nombres, IdRol, IdCredencial)
+8. Confirma transaccion o hace rollback
 
 **Salida exitosa:**
 ```json
@@ -439,12 +463,13 @@ Edita los datos de un usuario.
 | SegundoNombre | Cualquier usuario | Solo si mismo |
 | PrimerApellido | Cualquier usuario | Solo si mismo |
 | SegundoApellido | Cualquier usuario | Solo si mismo |
-| Correo | Cualquier usuario | Solo si mismo |
+| Correo | Solo admin puede cambiar | Solo si mismo |
 
 **Proceso:**
-1. Resuelve el usuario objetivo
-2. Valida permisos (no admin solo puede editarse a si mismo)
-3. Transaccion:
+1. Valida que el JSON sea valido (`json_decode`)
+2. Resuelve el usuario objetivo
+3. Valida permisos (no admin solo puede editarse a si mismo)
+4. Transaccion:
    - UPDATE `Usuario` (nombres y apellidos)
    - UPDATE `Credencial` (solo si es admin)
 
@@ -475,10 +500,11 @@ Elimina un usuario del sistema.
 ```
 
 **Proceso:**
-1. Transaccion:
+1. Valida que el JSON sea valido (`json_decode`)
+2. Transaccion:
    - DELETE de `Usuario` (primero, por las FK)
    - DELETE de `Credencial` (despues)
-2. Rollback si falla alguno
+3. Rollback si falla alguno
 
 **Salida exitosa:**
 ```json
@@ -507,11 +533,12 @@ Permite al usuario cambiar su propia contrasena.
 ```
 
 **Proceso:**
-1. Obtiene `IdCredencial` de la sesion
-2. Busca la contrasena actual en BD
-3. Verifica con `password_verify()`
-4. Si no coincide → error
-5. Si coincide → hashea la nueva y actualiza
+1. Valida que el JSON sea valido (`json_decode`)
+2. Obtiene `IdCredencial` de la sesion
+3. Busca la contrasena actual en BD
+4. Verifica con `password_verify()`
+5. Si no coincide → error
+6. Si coincide → hashea la nueva y actualiza
 
 **Salida exitosa:**
 ```json
@@ -543,7 +570,7 @@ Lista tareas segun el rol del usuario.
 
 **Comportamiento por rol:**
 - **Admin:** Lista todas las tareas
-- **Usuario:** Lista solo las tareas asignadas a el
+- **Usuario:** Lista solo las tareas asignadas a el (`WHERE t.IdUsuario = ?`)
 
 **SQL (admin):**
 ```sql
@@ -554,8 +581,8 @@ SELECT
     t.Estado,
     t.FechaCreacion,
     t.FechaFin,
-    CONCAT_WS(' ', u.PrimerNombre, u.PrimerApellido) AS Usuario
-FROM Tarea t
+    CONCAT(u.PrimerNombre, ' ', u.PrimerApellido) AS Usuario
+FROM Tarea AS t
 JOIN Usuario u ON u.IdUsuario = t.IdUsuario
 ```
 
@@ -568,8 +595,8 @@ SELECT
     t.Estado,
     t.FechaCreacion,
     t.FechaFin,
-    CONCAT_WS(' ', u.PrimerNombre, u.PrimerApellido) AS Usuario
-FROM Tarea t
+    CONCAT(u.PrimerNombre, ' ', u.PrimerApellido) AS Usuario
+FROM Tarea AS t
 JOIN Usuario u ON u.IdUsuario = t.IdUsuario
 WHERE t.IdUsuario = ?
 ```
@@ -582,8 +609,8 @@ WHERE t.IdUsuario = ?
         "Titulo": "Completar reporte",
         "Descripcion": "El reporte mensual",
         "Estado": "pendiente",
-        "FechaCreacion": "2025-01-15 10:30:00",
-        "FechaFin": "2025-01-20 23:59:00",
+        "FechaCreacion": "2026-08-11 10:30:00",
+        "FechaFin": "2026-08-15 23:59:00",
         "Usuario": "Juan Perez"
     }
 ]
@@ -591,7 +618,7 @@ WHERE t.IdUsuario = ?
 
 ---
 
-### obtener.php
+### obtenerTarea.php
 
 Obtiene los datos de una tarea especifica.
 
@@ -607,11 +634,12 @@ Obtiene los datos de una tarea especifica.
 ```
 
 **Proceso:**
-1. Obtiene la tarea por su ID
-2. Valida permisos:
+1. Valida que el JSON sea valido (`json_decode`)
+2. Obtiene la tarea por su ID
+3. Valida permisos:
    - Admin: puede ver cualquier tarea
    - Usuario: solo puede ver sus propias tareas
-3. Retorna los datos de la tarea
+4. Retorna los datos de la tarea
 
 **Salida:**
 ```json
@@ -624,8 +652,8 @@ Obtiene los datos de una tarea especifica.
         "Titulo": "Completar reporte",
         "Descripcion": "El reporte mensual",
         "Estado": "pendiente",
-        "FechaCreacion": "2025-01-15 10:30:00",
-        "FechaFin": "2025-01-20 23:59:00"
+        "FechaCreacion": "2026-08-11 10:30:00",
+        "FechaFin": "2026-08-15 23:59:00"
     }
 }
 ```
@@ -646,15 +674,16 @@ Crea una nueva tarea.
     "IdUsuario": 3,
     "Titulo": "Completar reporte",
     "Descripcion": "El reporte mensual de ventas",
-    "FechaFin": "2025-01-20"
+    "FechaFin": "2026-08-20"
 }
 ```
 
 **Proceso:**
-1. Valida campos obligatorios (`IdUsuario`, `Titulo`)
-2. `IdCreador` se toma de `$_SESSION`
-3. `Estado` se asigna automaticamente como `'pendiente'`
-4. INSERT en `Tarea`
+1. Valida que el JSON sea valido (`json_decode`)
+2. Valida campos obligatorios (`IdUsuario`, `Titulo`)
+3. `IdCreador` se toma de `$_SESSION["idUsuario"]`
+4. `Estado` se asigna automaticamente como `'pendiente'`
+5. INSERT en `Tarea`
 
 **Salida exitosa:**
 ```json
@@ -682,24 +711,23 @@ Edita una tarea existente.
     "Titulo": "Nuevo titulo",
     "Descripcion": "Nueva descripcion",
     "Estado": "en_progreso",
-    "FechaFin": "2025-01-25"
+    "FechaFin": "2026-08-25"
 }
 ```
 
 **Permisos:**
 | Campo | Admin | Usuario |
 |-------|-------|---------|
-| IdUsuario | ✅ | ❌ |
-| Titulo | ✅ | ❌ |
-| Descripcion | ✅ | ❌ |
-| Estado | ✅ | ✅ (solo sus tareas) |
-| FechaFin | ✅ | ❌ |
+| IdUsuario | Si | No |
+| Titulo | Si | No |
+| Descripcion | Si | No |
+| Estado | Si | Si (solo sus tareas) |
+| FechaFin | Si | No |
 
 **Proceso:**
-1. Obtiene la tarea para validar permisos
-2. Si no es admin y la tarea no es suya → error 403
-3. Admin: UPDATE de todos los campos
-4. Usuario: UPDATE solo del campo `Estado`
+1. Valida que el JSON sea valido (`json_decode`)
+2. Si no es admin: UPDATE solo del campo `Estado` (valida que la tarea sea suya)
+3. Si es admin: UPDATE de todos los campos
 
 **Salida exitosa:**
 ```json
@@ -727,7 +755,8 @@ Elimina una tarea del sistema.
 ```
 
 **Proceso:**
-1. DELETE de `Tarea` filtrando por `IdTarea`
+1. Valida que el JSON sea valido (`json_decode`)
+2. DELETE de `Tarea` filtrando por `IdTarea`
 
 **Salida exitosa:**
 ```json
@@ -750,17 +779,17 @@ Elimina una tarea del sistema.
 
 | Endpoint | Admin | Usuario |
 |----------|-------|---------|
-| `usuarios/listar.php` | ✅ | ❌ |
-| `usuarios/obtener.php` | ✅ (todos) | ✅ (solo propio) |
-| `usuarios/crear.php` | ✅ | ❌ |
-| `usuarios/editar.php` | ✅ (todos los campos) | ✅ (solo nombres, propio) |
-| `usuarios/eliminar.php` | ✅ | ❌ |
-| `usuarios/cambiar_contrasena.php` | ✅ | ✅ (solo propia) |
-| `tareas/listar.php` | ✅ (todas) | ✅ (solo suyas) |
-| `tareas/obtener.php` | ✅ (todas) | ✅ (solo suyas) |
-| `tareas/crear.php` | ✅ | ❌ |
-| `tareas/editar.php` | ✅ (todos los campos) | ✅ (solo estado, suyas) |
-| `tareas/eliminar.php` | ✅ | ❌ |
+| `usuarios/listarUsuarios.php` | Si | No |
+| `usuarios/obtenerUsuario.php` | Si (todos) | Si (solo propio) |
+| `usuarios/crear.php` | Si | No |
+| `usuarios/editar.php` | Si (todos los campos) | Si (solo nombres, propio) |
+| `usuarios/eliminar.php` | Si | No |
+| `usuarios/cambiar_contrasena.php` | Si | Si (solo propia) |
+| `tareas/listar.php` | Si (todas) | Si (solo suyas) |
+| `tareas/obtenerTarea.php` | Si (todas) | Si (solo suyas) |
+| `tareas/crear.php` | Si | No |
+| `tareas/editar.php` | Si (todos los campos) | Si (solo estado, suyas) |
+| `tareas/eliminar.php` | Si | No |
 
 ---
 
@@ -777,8 +806,8 @@ Elimina una tarea del sistema.
    - Escribe:
    ```json
    {
-       "correo": "tu_correo@ejemplo.com",
-       "contrasena": "tu_contrasena"
+       "correo": "admin@ejemplo.com",
+       "contrasena": "admin123"
    }
    ```
 5. Envia la peticion
@@ -787,14 +816,14 @@ Elimina una tarea del sistema.
 
 **Login:**
 ```bash
-curl -X POST http://localhost/SistemaUsuarios/api/auth/login.php \
-  -H "Content-Type: application/json" \
-  -d '{"correo":"tu_correo@ejemplo.com","contrasena":"tu_contrasena"}'
+curl -X POST http://localhost/SistemaUsuarios/api/auth/login.php `
+  -H "Content-Type: application/json" `
+  -d "{\"correo\":\"admin@ejemplo.com\",\"contrasena\":\"admin123\"}"
 ```
 
 **Listar usuarios (requiere cookie de sesion):**
 ```bash
-curl -X GET http://localhost/SistemaUsuarios/api/usuarios/listar.php \
+curl -X GET http://localhost/SistemaUsuarios/api/usuarios/listarUsuarios.php `
   -b "PHPSESSID=tu_session_id"
 ```
 
@@ -806,47 +835,14 @@ fetch('http://localhost/SistemaUsuarios/api/auth/login.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        correo: 'tu_correo@ejemplo.com',
-        contrasena: 'tu_contrasena'
+        correo: 'admin@ejemplo.com',
+        contrasena: 'admin123'
     }),
     credentials: 'include'  // Importante para enviar cookies de sesion
 })
 .then(response => response.json())
 .then(data => console.log(data));
 ```
-
-### Opcion 4: Crear un archivo de prueba PHP
-
-Crea un archivo `test.php` en la raiz del proyecto:
-
-```php
-<?php
-// Test de login
-$data = [
-    'correo' => 'admin@ejemplo.com',
-    'contrasena' => 'admin123'
-];
-
-$ch = curl_init('http://localhost/SistemaUsuarios/api/auth/login.php');
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_COOKIEJAR, 'cookies.txt');  // Guarda cookies
-
-$response = curl_exec($ch);
-echo "Login: " . $response . "\n";
-
-// Test listar usuarios (usa la cookie guardada)
-$ch = curl_init('http://localhost/SistemaUsuarios/api/usuarios/listar.php');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_COOKIEFILE, 'cookies.txt');
-
-$response = curl_exec($ch);
-echo "Usuarios: " . $response;
-```
-
-Ejecuta: `php test.php`
 
 ---
 
@@ -885,7 +881,7 @@ POST /api/usuarios/crear.php
 
 ### 3. Listar usuarios
 ```
-GET /api/usuarios/listar.php
+GET /api/usuarios/listarUsuarios.php
 ```
 
 ### 4. Crear una tarea
@@ -895,7 +891,7 @@ POST /api/tareas/crear.php
     "IdUsuario": 2,
     "Titulo": "Revisar documentos",
     "Descripcion": "Revisar los documentos del proyecto",
-    "FechaFin": "2025-12-31"
+    "FechaFin": "2026-12-31"
 }
 ```
 
@@ -903,6 +899,7 @@ POST /api/tareas/crear.php
 ```
 GET /api/auth/logout.php
 ```
+(Redirige al login)
 
 ### 6. Probar login con token
 ```
@@ -920,6 +917,6 @@ POST /api/auth/solicitar_token.php
 1. Clonar el repositorio
 2. Ejecutar `composer install` para instalar dependencias
 3. Ejecutar `sql/creardb.sql` en MySQL
-4. Configurar `.env` con las credenciales SMTP
-5. Apuntar el servidor web al directorio del proyecto
-
+4. Configurar `.env` con las credenciales de base de datos y SMTP
+5. Apuntar Apache al directorio del proyecto
+6. Abrir `http://localhost/SistemaUsuarios/public/index.html`
