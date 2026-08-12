@@ -57,3 +57,10 @@ INSERT INTO Rol(Descripcion)
 VALUES
 ('administrador'),
 ('empleado');
+
+--usuario administrador de prueba
+INSERT INTO Credencial (NombreUsuario, Correo, contrasena)
+VALUES ('admin', 'admin@ejemplo.com', '$2y$10$aa4LbsVISoKNmzSIkfJMc.Y32XwUa6N2beKPRUX7d6KexQI1YOmY6');
+
+INSERT INTO Usuario (PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, IdRol, IdCredencial)
+VALUES ('Admin', '', 'Sistema', '', 1, LAST_INSERT_ID());
