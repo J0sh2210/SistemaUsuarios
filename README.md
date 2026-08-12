@@ -923,3 +923,10 @@ POST /api/auth/solicitar_token.php
 4. Configurar `.env` con las credenciales SMTP
 5. Apuntar el servidor web al directorio del proyecto
 
+##Usuario de prueba credenciales
+
+
+Usuario:	admin
+Correo:	admin@ejemplo.com
+Contrasena:	admin123
+Rol	administrador: (IdRol = 1)
