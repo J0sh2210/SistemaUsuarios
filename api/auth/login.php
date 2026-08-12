@@ -40,6 +40,7 @@ if (!password_verify($contrasenaIngresada, $usuario["contrasena"])){
 
 session_start();
 $_SESSION['idUsuario']    = $usuario['IdUsuario'];
+$_SESSION['IdCredencial'] = $usuario['IdCredencial'];
 $_SESSION['nombre']       = $usuario['PrimerNombre'];
 $_SESSION['apellido']     = $usuario['PrimerApellido'];
 $_SESSION['rol']          = $usuario['IdRol'];

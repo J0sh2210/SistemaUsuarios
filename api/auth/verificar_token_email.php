@@ -41,6 +41,7 @@ $usuario = $stmt -> fetch(PDO::FETCH_ASSOC);
 
 session_start();
 $_SESSION['idUsuario']    = $usuario['IdUsuario'];
+$_SESSION['IdCredencial'] = $usuario['IdCredencial'];
 $_SESSION['nombre']       = $usuario['PrimerNombre'];
 $_SESSION['apellido']     = $usuario['PrimerApellido'];
 $_SESSION['rol']          = $usuario['IdRol'];
