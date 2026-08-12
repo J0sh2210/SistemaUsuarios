@@ -2,11 +2,14 @@
 require __DIR__ . "/../../config/conexion.php";
 require __DIR__ . "/../../middleware/rol_admin.php";
 
-session_start();
-
 $json = file_get_contents("php://input");
 $datos = json_decode($json,true);
 header("Content-Type: application/json");
+
+if (!$datos) {
+    echo json_encode(["success" => false, "message" => "JSON invalido"]);
+    exit;
+}
 
 if (!isset($datos["IdUsuario"], $datos["Titulo"]
 )){
@@ -18,7 +21,7 @@ if (!isset($datos["IdUsuario"], $datos["Titulo"]
 }
 
 $IdUsuario =$datos["IdUsuario"];
-$IdCreador = $_SESSION["IdUsuario"];
+$IdCreador = $_SESSION["idUsuario"];
 $Titulo =$datos["Titulo"];
 $Descripcion =$datos["Descripcion"];
 $FechaFin =$datos["FechaFin"];

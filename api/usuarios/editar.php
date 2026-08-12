@@ -5,6 +5,13 @@ require __DIR__ . "/../../middleware/auth.php";
 
 $json = file_get_contents("php://input");
 $datos = json_decode($json,true);
+
+if (!$datos) {
+    header("Content-Type: application/json");
+    echo json_encode(["success" => false, "message" => "JSON invalido"]);
+    exit;
+}
+
 $IdUsuario   = $datos["IdUsuario"] ?? $_SESSION["idUsuario"];
 $IdCredencial = $datos["IdCredencial"] ?? null;
 

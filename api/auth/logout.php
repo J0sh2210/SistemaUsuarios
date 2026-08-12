@@ -2,7 +2,5 @@
 session_start();
 session_unset();
 session_destroy();
-echo json_encode([
-    "success" => true,
-    "message" => "Sesion cerrada"
-]);
+header("Location: ../../public/index.html");
+exit;

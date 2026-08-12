@@ -4,6 +4,11 @@ $json = file_get_contents("php://input");
 $datos = json_decode($json,true);
 header("Content-Type: application/json");
 
+if (!$datos) {
+    echo json_encode(["success" => false, "message" => "JSON invalido"]);
+    exit;
+}
+
 if (!isset($datos["correo"], $datos["contrasena"])){
     echo json_encode([
         "success" => false,
@@ -39,12 +44,12 @@ if (!password_verify($contrasenaIngresada, $usuario["contrasena"])){
 }
 
 session_start();
-$_SESSION['idUsuario']    = $usuario['IdUsuario'];
-$_SESSION['IdCredencial'] = $usuario['IdCredencial'];
+$_SESSION['idUsuario']    = (int)$usuario['IdUsuario'];
+$_SESSION['IdCredencial'] = (int)$usuario['IdCredencial'];
 $_SESSION['nombre']       = $usuario['PrimerNombre'];
 $_SESSION['apellido']     = $usuario['PrimerApellido'];
-$_SESSION['rol']          = $usuario['IdRol'];
-$_SESSION['correo']       = $usuario['Correo'];
+$_SESSION['rol']          = (int)$usuario['IdRol'];
+$_SESSION['correo']       = $usuario['correo'];
 $_SESSION['autenticado']  = true;
 
 echo json_encode([

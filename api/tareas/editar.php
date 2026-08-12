@@ -2,17 +2,23 @@
 
 require __DIR__ . "/../../config/conexion.php";
 require __DIR__ . "/../../middleware/auth.php";
-session_start();
 
 $json = file_get_contents("php://input");
 $datos = json_decode($json,true);
+
+if (!$datos) {
+    header("Content-Type: application/json");
+    echo json_encode(["success" => false, "message" => "JSON invalido"]);
+    exit;
+}
+
 $IdTarea = $datos["IdTarea"];
 $IdUsuario = $datos["IdUsuario"];
 $Titulo = $datos["Titulo"];
 $Descripcion = $datos["Descripcion"];
 $Estado = $datos["Estado"];
 $FechaFin = $datos["FechaFin"];
-$IdUsuarioSesion = $_SESSION["IdUsuario"];
+$IdUsuarioSesion = $_SESSION["idUsuario"];
 header("Content-Type: application/json");
 
 if ($_SESSION["rol"] !== 1){
@@ -30,6 +36,11 @@ if (!$resultado) {
     ]);
     exit;
 }
+
+echo json_encode([
+    "success" => true,
+    "message" => "Tarea editada correctamente"
+]);
 }
 
 else {

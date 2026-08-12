@@ -2,6 +2,7 @@
 require __DIR__ . "/../../config/conexion.php";
 require __DIR__ . "/../../vendor/autoload.php";
 require __DIR__ . "/../../services/token_service.php";
+require __DIR__ . "/../../services/mail_service.php";
 $json = file_get_contents("php://input");
 $datos = json_decode($json,true);
 header("Content-Type: application/json");

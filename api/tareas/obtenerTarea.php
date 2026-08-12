@@ -1,11 +1,15 @@
 <?php
 require __DIR__ . "/../../config/conexion.php";
 require __DIR__ . "/../../middleware/auth.php";
-session_start();
 
 $json = file_get_contents("php://input");
 $datos = json_decode($json, true);
 header("Content-Type: application/json");
+
+if (!$datos) {
+    echo json_encode(["success" => false, "message" => "JSON invalido"]);
+    exit;
+}
 
 $idTarea = $datos["IdTarea"];
 

@@ -7,6 +7,11 @@ $json = file_get_contents("php://input");
 $datos = json_decode($json,true);
 header("Content-Type: application/json");
 
+if (!$datos) {
+    echo json_encode(["success" => false, "message" => "JSON invalido"]);
+    exit;
+}
+
 $IdUsuario = $datos["IdUsuario"];
 $IdCredencial = $datos["IdCredencial"];
 

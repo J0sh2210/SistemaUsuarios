@@ -33,7 +33,7 @@ class mail_service {
             $mail -> addAddress($correo);
             $mail -> isHTML(true);
             $mail -> Subject = "Correo para login";
-            $url = "http://localhost/SistemaUsuarios/api/auth/verificar_token.php?token=" . urlencode($token) ;
+            $url = $_ENV["APP_URL"] . "/api/auth/verificar_token_email.php?token=" . urlencode($token);
             $mail -> Body = "<h1>Hola</h1> <p>Ingresa al link para iniciar sesion: </p> 
             <a href = '$url'>Iniciar sesion </a>
             " ;

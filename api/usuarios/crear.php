@@ -12,7 +12,7 @@ if (!isset($datos["PrimerNombre"], $datos["SegundoNombre"], $datos["PrimerApelli
 )){
     echo json_encode([
         "success" => false,
-        "message" => $datos
+        "message" => "Faltan campos obligatorios"
     ]);
     exit;
 }

@@ -1,8 +1,16 @@
 <?php
 
 require __DIR__ . "/../../config/conexion.php";
-Header("Content-Type: application/json");
-$token = $_GET["token"];
+
+$token = $_GET["token"] ?? null;
+
+if (!$token) {
+    header("Content-Type: application/json");
+    echo json_encode(["success" => false, "message" => "Token no proporcionado"]);
+    exit;
+}
+
+header("Content-Type: application/json");
 
 $sql = "UPDATE LoginToken 
         SET Usado = TRUE 
@@ -40,14 +48,14 @@ $usuario = $stmt -> fetch(PDO::FETCH_ASSOC);
 
 
 session_start();
-$_SESSION['idUsuario']    = $usuario['IdUsuario'];
-$_SESSION['IdCredencial'] = $usuario['IdCredencial'];
+$_SESSION['idUsuario']    = (int)$usuario['IdUsuario'];
+$_SESSION['IdCredencial'] = (int)$usuario['IdCredencial'];
 $_SESSION['nombre']       = $usuario['PrimerNombre'];
 $_SESSION['apellido']     = $usuario['PrimerApellido'];
-$_SESSION['rol']          = $usuario['IdRol'];
-$_SESSION['correo']       = $usuario['Correo'];
+$_SESSION['rol']          = (int)$usuario['IdRol'];
+$_SESSION['correo']       = $usuario['correo'];
 $_SESSION['autenticado']  = true;
 
 
-header("Location: ../../public/dashboard.html");
+header("Location: ../../public/dashboard.php");
 exit;
